@@ -333,12 +333,12 @@ window.onload = () => {
 
    drop.style.width = `${hgt*0.1}px`;
    drop.style.height = `${hgt*0.1}px`;
-   drop.style.left = `${(wdt-canvas.width)/2+hgt*0.21}px`;
+   drop.style.left = `${wdt/2-hgt*0.12}px`;
    drop.style.top = `${hgt*0.825}px`;
 
    rot.style.width = `${hgt*0.1}px`;
    rot.style.height = `${hgt*0.1}px`;
-   rot.style.right = `${(wdt-canvas.width)/2+hgt*0.21}px`;
+   rot.style.right = `${wdt/2-hgt*0.12}px`;
    rot.style.top = `${hgt*0.825}px`;
 
    Begin();
