@@ -4,7 +4,9 @@ let gameOver = false;
 let score = 0;
 let high_score = 0;
 let level = 2;
-let next;
+let piece, next, left, right, box_side, canvas, ctx, drop, rot;
+const wdt = window.innerWidth;
+const hgt = window.innerHeight;
 const points = [50, 150, 350, 1000, 2000];
 const colors = ['crimson', 'orangered', 'greenyellow', 'dodgerblue', 'pink', 'lime', 'white'];
 const pieces = [
@@ -20,12 +22,8 @@ const images = [new Image(), new Image(), new Image(), new Image(), new Image(),
 for(let i = 0;i != 7; i++) {
    images[i].src = `./assets/${colors[i]}.png`;
    images[i].onload = () => {
-      console.log('Image loaded');
+      // console.log('Image loaded');
    }
-}
-
-for(let i = 0;i != 20; i++) {
-   staticPieces.push([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 }
 
 const drawGrid = (canvas, ctx, box_side) => {
@@ -62,16 +60,14 @@ const drawGrid = (canvas, ctx, box_side) => {
    }
    ctx.restore();
    ctx.save();
-   ctx.font = 'bold 18px Maiandra GD'
-   let text = `Score: ${score}`;
-   ctx.fillText(text, box_side*13-ctx.measureText(text).width/2, box_side*14);
-   text = `Level: ${level}`;
-   ctx.fillText(text, box_side*13-ctx.measureText(text).width/2, box_side*15);
-   text = `High Score: ${high_score}`;
-   ctx.fillText(text, box_side*13-ctx.measureText(text).width/2, box_side*16);
-   text = 'Next Piece';
-   ctx.fillText('Next Piece', box_side*13-ctx.measureText(text).width/2, box_side);
+   ctx.shadowColor = '#000';
+   ctx.shadowBlur = 2;
+   ctx.font = `bold ${box_side*0.7}px Times New Roman`
+   let text = 'NEXT PIECE';
+   ctx.fillText(text, box_side*13-ctx.measureText(text).width/2, box_side);
    ctx.restore();
+   document.querySelector('#score').childNodes[0].nodeValue = score;
+   document.querySelector('#high_score').childNodes[0].nodeValue = high_score;
 };
 
 const drawPiece = (ctx, box_side, piece) => {
@@ -190,37 +186,34 @@ const addToGrid = piece => {
    }
 };
 
-window.onload = () => {
-   const canvas = document.querySelector('#Canvas');
-   const ctx = canvas.getContext('2d');
-   const wdt = window.innerWidth;
-   const hgt = window.innerHeight;
-   canvas.height = hgt*0.8;
-   const box_side = canvas.height/20;
-   canvas.width = box_side*16;
-   canvas.style.left = `${wdt/2-(canvas.width<wdt?canvas.width/2:wdt/2)}px`;
+const Begin = () => {
+   score = 0;
+   staticPieces = [];
+   for(let i = 0;i != 20; i++) {
+      staticPieces.push([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+   }
+
    drawGrid(canvas, ctx, box_side);
-   let piece = newPiece();
+   piece = newPiece();
    next = newPiece();
 
    drawPiece(ctx, box_side, piece);
-   canvas.onclick = e => {
-      let rot = rotate(piece);
-      if(collisionY(rot) || collisionX(rot))
-         return;
-      piece = rot;
-   }
    window.onkeydown = key => {
       if(key.key === 'ArrowUp') {
-         if(collisionY(rotate(piece))) 
+         let rot = rotate(piece);
+         if(collisionY(rot) || collisionX(rot))
             return;
-         piece = rotate(piece);
-         ctx.clearRect(0, 0, wdt, hgt);
-         drawGrid(canvas, ctx, box_side);
-         drawPiece(ctx, box_side, piece);
+         piece = rot;
       }
       else if(key.key === 'ArrowDown') {
-         // do nothing for now
+         if(piece.y < 1) return;
+         for(let i = piece.y;i != 20; i++) {
+            piece.y += 1;
+            if(collisionY(piece)) {
+               piece.y -= 1;
+               return;
+            }
+         }
       }
       else if(key.key === 'ArrowLeft') {
          piece.x -= 1;
@@ -233,19 +226,35 @@ window.onload = () => {
             piece.x -= 1;
       }
    };
-   document.querySelector('#right').onclick = () => {
+   right.onclick = () => {
       piece.x += 1;
          if(collisionY(piece) || collisionX(piece))
             piece.x -= 1;
    };
-   document.querySelector('#left').onclick = () => {
+   left.onclick = () => {
       piece.x -= 1;
          if(collisionY(piece) || collisionX(piece))
             piece.x += 1;
    };
+   rot.onclick = () => {
+      let rot = rotate(piece);
+      if(collisionY(rot) || collisionX(rot))
+         return;
+      piece = rot;
+   }
+   drop.onclick = () => {
+      if(piece.y < 1) return;
+         for(let i = piece.y;i != 20; i++) {
+            piece.y += 1;
+            if(collisionY(piece)) {
+               piece.y -= 1;
+               return;
+            }
+         }
+   }
+   
    const Game = () => {
-      if(!gameOver)
-         requestAnimationFrame(Game);
+      let anim = window.requestAnimationFrame(Game);
       if(iter < Math.floor(20/level)) {
          iter += 1;
          return;
@@ -255,8 +264,10 @@ window.onload = () => {
       if(collisionY(piece)) {
          piece.y -= 1;
          if(piece.y <= -1) {
-            gameOver = true;
+            if(score > high_score) high_score = score;
             alert('Game Over');
+            window.cancelAnimationFrame(anim);
+            window.onclick = Begin();
             return;
          }
          addToGrid(piece);
@@ -270,4 +281,65 @@ window.onload = () => {
       purgeRows();
    };
    Game();
+}
+
+window.onload = () => {
+   canvas = document.querySelector('#Canvas');
+   ctx = canvas.getContext('2d');
+   left = document.querySelector('#left');
+   right = document.querySelector('#right');
+   drop = document.querySelector('#drop');
+   rot = document.querySelector('#rotate');
+
+   canvas.height = hgt*0.8;
+   box_side = canvas.height/20;
+   canvas.width = box_side*16;
+   if(canvas.width > wdt) {
+      let diff = canvas.width - wdt;
+      canvas.width -= diff;
+      canvas.height -= diff;
+      box_side = canvas.height/20;
+   }
+
+   canvas.style.left = `${wdt/2-(canvas.width<wdt?canvas.width/2:wdt/2)}px`;
+   let t = 0;
+   for(let elem of document.querySelectorAll('.stats')) {
+      elem.style.width = `${box_side*4-2}px`;
+      elem.style.height = `${box_side*0.8-2}px`;
+      elem.style.left = `${(wdt-canvas.width)/2 + box_side*11}px`;
+      elem.style.top = `${box_side*(13+t*1.6)}px`;
+      elem.style.fontSize = `${0.8*box_side-4}px`;
+      t += 1;
+   }
+   for(let elem of document.querySelectorAll('.name')) {
+      elem.style.width = `${box_side*4-2}px`;
+      elem.style.height = `${box_side*0.8-2}px`;
+      elem.style.top = `-${box_side*0.6}px`;
+      elem.style.fontSize = `${0.55*box_side-2}px`;
+   }
+
+   document.querySelector('#level').childNodes[0].nodeValue = level;
+   document.querySelector('#high_score').childNodes[0].nodeValue = high_score;
+   
+   left.style.width = `${hgt*0.15}px`;
+   left.style.height = `${hgt*0.15}px`;
+   left.style.left = `${(wdt-canvas.width)/2}px`;
+   left.style.top = `${hgt*0.825}px`;
+
+   right.style.width = `${hgt*0.15}px`;
+   right.style.height = `${hgt*0.15}px`;
+   right.style.right = `${(wdt-canvas.width)/2}px`;
+   right.style.top = `${hgt*0.825}px`;
+
+   drop.style.width = `${hgt*0.1}px`;
+   drop.style.height = `${hgt*0.1}px`;
+   drop.style.left = `${(wdt-canvas.width)/2+hgt*0.21}px`;
+   drop.style.top = `${hgt*0.825}px`;
+
+   rot.style.width = `${hgt*0.1}px`;
+   rot.style.height = `${hgt*0.1}px`;
+   rot.style.right = `${(wdt-canvas.width)/2+hgt*0.21}px`;
+   rot.style.top = `${hgt*0.825}px`;
+
+   Begin();
 };
