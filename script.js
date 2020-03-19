@@ -19,12 +19,6 @@ const pieces = [
    [ [0, 1], [0, 1], [1, 1] ]
 ];
 const images = [new Image(), new Image(), new Image(), new Image(), new Image(), new Image(), new Image()];
-for(let i = 0;i != 7; i++) {
-   images[i].src = `./assets/${colors[i]}.png`;
-   images[i].onload = () => {
-      // console.log('Image loaded');
-   }
-}
 
 const drawGrid = (canvas, ctx, box_side) => {
    ctx.save();
@@ -341,5 +335,18 @@ window.onload = () => {
    rot.style.right = `${wdt/2-hgt*0.12}px`;
    rot.style.top = `${hgt*0.825}px`;
 
-   Begin();
+   t = 0;
+   for(let i = 0;i != 7; i++) {
+      images[i].src = `https://github.com/Gamma-001/Classic_Tetris/blob/master/assets/${colors[i]}.png?raw=true`;
+      images[i].onload = () => {
+         t += 1;
+         document.querySelector('#slider').style.width = `${100*(t+1)/7}%`;
+         document.querySelector('#progress-text').innerHTML = `${Math.floor(100*(t+1)/7)}% loaded`;
+         if(i == 6) {
+            document.querySelector('#progress').style.visibility = 'hidden';
+            document.querySelector('#cover').style.visibility = 'hidden';
+            setTimeout(Begin(), 500);
+         }
+      }
+   }
 };
