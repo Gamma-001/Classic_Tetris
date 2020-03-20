@@ -3,7 +3,8 @@ let iter = 0;
 let gameOver = false;
 let score = 0;
 let high_score = 0;
-let level = 2;
+let level = 10;
+let totalLines = 0;
 let piece, next, left, right, box_side, canvas, ctx, drop, rot;
 const wdt = window.innerWidth;
 const hgt = window.innerHeight;
@@ -61,13 +62,12 @@ const drawGrid = (canvas, ctx, box_side) => {
    ctx.fillText(text, box_side*13-ctx.measureText(text).width/2, box_side);
    ctx.restore();
    document.querySelector('#score').childNodes[0].nodeValue = score;
+   document.querySelector('#level').childNodes[0].nodeValue = level;
    document.querySelector('#high_score').childNodes[0].nodeValue = high_score;
 };
 
 const drawPiece = (ctx, box_side, piece) => {
    ctx.save();
-   ctx.shadowColor = 'black';
-   ctx.shadowBlur = 10;
    for(let i = 0;i != piece.mat.length; i++) {
       for(let j = 0;j != piece.mat[0].length; j++) {
          if(piece.mat[i][j] !== 0) {
@@ -75,6 +75,8 @@ const drawPiece = (ctx, box_side, piece) => {
          }
       }
    }
+   ctx.shadowColor = 'black';
+   ctx.shadowBlur = 2;
    let col = next.mat[0].length;
    for(let i = 0;i != next.mat.length; i++) {
       for(let j = 0;j != col; j++) {
@@ -125,9 +127,9 @@ const newPiece = () => {
       y: 0,
       offY: 0,
       offX: 0
-   };
-   piece.y = -piece.mat.length;
+   }
    if(index === 0) piece.offY = 1;
+   piece.y = -piece.mat.length-piece.offY+1;
    if(collisionY(piece))
       gameOver = true;
    return piece;
@@ -145,10 +147,14 @@ const purgeRows = () => {
    }
    if(!lines)
       return;
-   if(lines && lines <= 4)
+   totalLines += lines;
+   if(level <= 10 && totalLines >= Math.pow(2, level+1)) {
+      level += 1;
+   }
+   if(lines <= 5)
       score += points[lines-1]*level;
    else if(lines > 5)
-      score += points[4]*level;
+      score += (points[4])*level*(Math.pow(2, lines-6+1));
 };
 
 const collisionY = piece => {
@@ -200,7 +206,7 @@ const Begin = () => {
          piece = rot;
       }
       else if(key.key === 'ArrowDown') {
-         if(piece.y < 1) return;
+         if(piece.y+piece.mat.length < 1) return;
          for(let i = piece.y;i != 20; i++) {
             piece.y += 1;
             if(collisionY(piece)) {
@@ -238,41 +244,41 @@ const Begin = () => {
    }
    drop.onclick = () => {
       if(piece.y < 1) return;
-         for(let i = piece.y;i != 20; i++) {
-            piece.y += 1;
-            if(collisionY(piece)) {
-               piece.y -= 1;
-               return;
-            }
+      for(let i = piece.y;i != 20; i++) {
+         piece.y += 1;
+         if(collisionY(piece)) {
+            piece.y -= 1;
+            return;
          }
+      }
    }
    
    const Game = () => {
       let anim = window.requestAnimationFrame(Game);
-      if(iter < Math.floor(20/level)) {
-         iter += 1;
-         return;
+      if(iter === 25-level*2) {
+         piece.y += 1;
       }
-      iter = 0;
-      piece.y += 1;
+      iter = (iter+1)%(25-level*2);
       if(collisionY(piece)) {
-         piece.y -= 1;
+         piece.y -= 1
+         score += 10*level;
          if(piece.y <= -1) {
             if(score > high_score) high_score = score;
             alert('Game Over');
+            level = 1;
             window.cancelAnimationFrame(anim);
             window.onclick = Begin();
             return;
          }
          addToGrid(piece);
+         purgeRows();
          piece = next;
          next = newPiece();
-         score += 10*level;
       }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawGrid(canvas, ctx, box_side);
       drawPiece(ctx, box_side, piece);
-      purgeRows();
+      iter += 1;
    };
    Game();
 }
@@ -312,9 +318,6 @@ window.onload = () => {
       elem.style.fontSize = `${0.55*box_side-2}px`;
    }
 
-   document.querySelector('#level').childNodes[0].nodeValue = level;
-   document.querySelector('#high_score').childNodes[0].nodeValue = high_score;
-   
    left.style.width = `${hgt*0.15}px`;
    left.style.height = `${hgt*0.15}px`;
    left.style.left = `${(wdt-canvas.width)/2}px`;
