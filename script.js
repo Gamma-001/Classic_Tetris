@@ -3,7 +3,7 @@ let iter = 0;
 let gameOver = false;
 let score = 0;
 let high_score = 0;
-let level = 10;
+let level = 1;
 let totalLines = 0;
 let piece, next, left, right, box_side, canvas, ctx, drop, rot;
 const wdt = window.innerWidth;
