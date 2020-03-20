@@ -3,7 +3,7 @@ let iter = 0;
 let gameOver = false;
 let score = 0;
 let high_score = 0;
-let level = 1;
+let level = 10;
 let totalLines = 0;
 let piece, next, left, right, box_side, canvas, ctx, drop, rot;
 const wdt = window.innerWidth;
@@ -47,16 +47,12 @@ const drawGrid = (canvas, ctx, box_side) => {
    for(let i = 0;i != staticPieces.length; i++) {
       for(let j = 0;j != staticPieces[0].length; j++) {
          if(staticPieces[i][j] !== 0) {
-            ctx.shadowColor = 'black';
-            ctx.shadowBlur = 10;
             ctx.drawImage(images[staticPieces[i][j]-1], j*box_side+1, i*box_side+1, box_side-2, box_side-2)
          }
       }
    }
    ctx.restore();
    ctx.save();
-   ctx.shadowColor = '#000';
-   ctx.shadowBlur = 2;
    ctx.font = `bold ${box_side*0.7}px Times New Roman`
    let text = 'NEXT PIECE';
    ctx.fillText(text, box_side*13-ctx.measureText(text).width/2, box_side);
